@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta chareset="utf-8">
+        <title>オセロをしよう</title>
+        <style type="text/css">
+            #field td {
+            border: 1px solid black;
+            width: 50px;
+            height: 50px;
+            background-color: green;
+            text-align: center;
+            vertical-align: middle;
+            table-layout: fixed;
+            padding: 1px 1px 1px 1px;
+            font-size: 33px;
+            }
+            </style>
+    </head>
+
+    <body>
+        <header>
+            <h1>二人でオセロをしよう♪</h1>
+
+        </header>
+
+<table id="field"></table>
+
+<p id="view_tarn"></p>
+
+<button type="button" id="ban_init" onclick="ban_init()">最初からスタート！</button>
+
+<script type="text/javascript">
+var turn = 0 
+var ban_ar = new Array(8)
+for (var x = 0; x < ban_ar.length; x++){
+ban_ar[x] = new Array(8)
+}
+
+var ban = document.getElementById('field')
+
+ban_new()
+
+ban_init()
+
+
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+var select_cell = ban.rows[x].cells[y];
+select_cell.onclick = function() {
+
+if (ban_ar[this.parentNode.rowIndex][this.cellIndex] == 0) {
+if (check_reverse(this.parentNode.rowIndex,this.cellIndex) > 0){
+ban_set()
+cheng_turn()
+}
+}
+}
+}
+}
+
+function ban_new() {
+for (var x = 0; x < 8; x++) {
+var tr = document.createElement("tr")
+ban.appendChild(tr)
+for (var y = 0; y < 8; y++) {
+var td = document.createElement("td")
+tr.appendChild(td)
+}
+}
+};
+
+
+function ban_init () {
+
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+ban_ar[x][y] = 0
+}
+}
+
+ban_ar[3][3] = -1
+ban_ar[4][3] = 1
+ban_ar[3][4] = 1
+ban_ar[4][4] = -1
+ban_set()
+
+
+turn = 0
+cheng_turn()
+};
+
+
+function ban_set () {
+var stone = ""
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+switch( ban_ar[x][y] ) {
+case 0:
+stone = ""
+break;
+case -1:
+stone = "○"
+break;
+case 1:
+stone = "●"
+break;
+}
+ban.rows[x].cells[y].innerText = stone;
+}
+}
+return true
+};
+
+
+function cheng_turn () {
+var tarn_msg = document.getElementById('view_tarn')
+if(turn == 0){
+
+turn = 1
+tarn_msg.textContent = "黒のターンです!"
+return
+}
+
+turn = turn * -1
+
+var ban_bak = new Array(8)
+var check_reverse_cnt = 0
+for (var i = 0; i < ban_ar.length; i++){
+ban_bak[i] = new Array(8)
+}
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+ban_bak[x][y] = ban_ar[x][y]
+}
+}
+
+
+var white_cnt = 0
+var black_cnt = 0
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+
+switch( ban_ar[x][y] ) {
+case 0:
+check_reverse_cnt = check_reverse_cnt + check_reverse(x,y)
+for (var i = 0; i < 8; i++) {
+for (var ii = 0; ii < 8; ii++) {
+ban_ar[i][ii] = ban_bak[i][ii]
+}
+}
+break;
+case -1:
+white_cnt++
+break
+case 1:
+black_cnt++
+break
+}
+}
+}
+
+if (white_cnt + black_cnt == 64 || white_cnt == 0 || black_cnt == 0){
+if( white_cnt == black_cnt) {
+alert("なんと！勝負は引き分けです！2人とも強い！！")
+} else if (white_cnt > black_cnt){
+alert("おー！勝負は、黒：" + black_cnt + "対、白：" + white_cnt + "で、白の勝ちです！")
+} else {
+alert("おー！勝負は、黒："+ black_cnt + "対、白："+ white_cnt + "で、黒の勝ちです！")
+}
+
+} else {
+
+if(check_reverse_cnt == 0){
+switch( turn ) {
+case -1:
+alert("残念（ ;  ; ）白の置ける場所がありません。黒のターンとなります。")
+turn = turn * -1
+break;
+case 1:
+alert("残念（ ;  ; ）黒の置ける場所がありません。白のターンとなります。")
+turn = turn * -1
+break;
+}
+}
+}
+
+
+switch( turn ) {
+case -1:
+tarn_msg.textContent = "白のターンです！";
+break;
+case 1:
+tarn_msg.textContent = "黒のターンです！";
+break;
+}
+};
+
+
+function check_reverse (row_index,cell_indx){
+var reverse_cnt = 0
+
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx,-1, 0) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx,-1, 1) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx, 0, 1) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx, 1, 1) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx, 1, 0) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx, 1,-1) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx, 0,-1) 
+reverse_cnt = reverse_cnt + line_reverse(row_index,cell_indx,-1,-1) 
+return reverse_cnt
+}
+
+
+function line_reverse (row_index,cell_indx,add_x,add_y) {
+
+var ban_bak = new Array(8)
+for (var i = 0; i < ban_ar.length; i++){
+ban_bak[i] = new Array(8)
+}
+for (var x = 0; x < 8; x++) {
+for (var y = 0; y < 8; y++) {
+ban_bak[x][y] = ban_ar[x][y]
+}
+}
+var line_reverse_cnt = 0 
+var turn_flg = 0 
+var xx = row_index 
+var yy = cell_indx 
+
+while (true){
+xx = xx + add_x
+yy = yy + add_y
+
+if(xx < 0 || xx > 7 || yy < 0 || yy > 7) {
+break;
+}
+if(ban_ar[xx][yy] == 0) {
+break;
+}
+if(ban_ar[xx][yy] == turn) {
+turn_flg = 1
+break;
+}
+ban_ar[xx][yy] = ban_ar[xx][yy] * -1
+line_reverse_cnt++
+}
+if(line_reverse_cnt > 0 ) {
+if(turn_flg == 0) {
+for (var i = 0; i < 8; i++) {
+for (var ii = 0; ii < 8; ii++) {
+ban_ar[i][ii] = ban_bak[i][ii]
+line_reverse_cnt = 0
+}
+}
+} else {
+ban_ar[row_index][cell_indx] = turn
+}
+}
+
+return line_reverse_cnt
+}
+
+</script>
+
+    <h2>飽きるまで遊んでね^^</h2>
+
+    </body>
+
+</html>
+    
